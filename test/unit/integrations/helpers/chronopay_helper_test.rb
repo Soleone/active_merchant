@@ -64,4 +64,41 @@ class ChronopayHelperTest < Test::Unit::TestCase
     fields['state'] = 'XX'
     assert_equal fields, @helper.fields
   end
+  
+  
+  def test_billing_address_sets_checkout_language_for_spain
+    @helper.billing_address :country => 'Spain',
+                            :address1 => '1 My Street',
+                            :city => 'Madrid',
+                            :zip => '90210'
+   
+    assert_field 'country', 'ESP'
+    assert_field 'street', '1 My Street'
+    assert_field 'zip', '90210'
+    assert_field 'language', 'ES'
+  end
+  
+  def test_billing_address_sets_checkout_language_for_us
+    @helper.billing_address :country => 'USA',
+                            :address1 => '1 My Street',
+                            :city => 'New York',
+                            :zip => '90210'
+   
+    assert_field 'country', 'USA'
+    assert_field 'street', '1 My Street'
+    assert_field 'zip', '90210'
+    assert_field 'language', 'EN'
+  end
+
+  def test_billing_address_sets_checkout_language_for_germany
+    @helper.billing_address :country => 'DEU',
+                            :address1 => 'Meine Strasse 1',
+                            :city => 'Berlin',
+                            :zip => '12345'
+   
+    assert_field 'country', 'DEU'
+    assert_field 'language', 'DE'
+  end
+  
+  
 end
