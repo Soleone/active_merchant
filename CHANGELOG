@@ -1,5 +1,6 @@
 = ActiveMerchant CHANGELOG
 
+* PayFlow: Use same timeout of 60 seconds in HTTP header and XML for all requests [Soleone]
 * PayPal Website Payments Pro CA no longer supports American Express cards [Soleone]
 * Add support for PayboxDirect gateway [Donald Piret]
 * Add support for SecureNet gateway [Kal]
