@@ -106,9 +106,9 @@ module ActiveMerchant #:nodoc:
         'american_express' => 'a',
       }
       def add_creditcard(post, creditcard)
-        prefix = CARD_TYPE_PREFIXES[creditcard.type]
+        prefix = CARD_TYPE_PREFIXES[creditcard.brand]
         unless prefix
-          raise ArgumentError.new("Card type #{creditcard.type} not supported.")
+          raise ArgumentError.new("Card type #{creditcard.brand} not supported.")
         end
 
         post[:creditcard] = {}
