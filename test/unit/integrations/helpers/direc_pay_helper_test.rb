@@ -39,17 +39,40 @@ class DirecPayHelperTest < Test::Unit::TestCase
   
   def test_address_with_a_single_street_address_field
     @helper.billing_address :address1 => "1 My Street"
-    @helper.shipping_address :address1 => "1 My Street"    
+    @helper.shipping_address :address1 => "1 My Street"
     assert_field "custAddress", "1 My Street"
-    assert_field "deliveryAddress", "1 My Street"    
+    assert_field "deliveryAddress", "1 My Street"
   end
   
-  def test_phone_number_mapping
-    @helper.billing_address :phone => "+91 022 28000000"
+  def test_address_with_two_street_address_fields
+    @helper.billing_address :address1 => "1 My Street", :address2 => "Apt 3"
+    @helper.shipping_address :address1 => "1 My Street", :address2 => "Apt 3"
+    assert_field "custAddress", "1 My Street Apt 3"
+    assert_field "deliveryAddress", "1 My Street Apt 3"
+  end
+  
+  def test_phone_number_mapping_for_india
+    @helper.billing_address :phone => "+91 022 28000000", :country => 'IN'
     
     assert_field 'custPhoneNo1', '91'
     assert_field 'custPhoneNo2', '022'
-    assert_field 'custPhoneNo3', '28000000'        
+    assert_field 'custPhoneNo3', '28000000'
+  end
+  
+  def test_phone_number_mapping_for_america
+    @helper.billing_address :phone => "6131234567", :country => 'CA'
+    
+    assert_field 'custPhoneNo1', '01'
+    assert_field 'custPhoneNo2', '613'
+    assert_field 'custPhoneNo3', '1234567'
+  end
+  
+  def test_phone_number_mapping_for_germany
+    @helper.billing_address :phone => "+49 2628 12345", :country => 'DE'
+    
+    assert_field 'custPhoneNo1', '49'
+    assert_field 'custPhoneNo2', '2628'
+    assert_field 'custPhoneNo3', '12345'
   end
   
   def test_shipping_address_mapping
@@ -79,18 +102,24 @@ class DirecPayHelperTest < Test::Unit::TestCase
     assert_equal fields, @helper.fields
   end
   
-  def test_generate_request_parameter
+  def test_add_request_parameters
     fill_in_transaction_details!(@helper)
     
-    transaction_params = ['account id', 'DOM', 'IND', 'INR', '5.00', "#1234", 'NULL', "http://localhost/return", "http://localhost/cancel", "TOML"]
-    @helper.expects(:encode_value).with(transaction_params.join('|'))
+    transaction_params = ['account id', 'DOM', 'IND', 'INR', '5.00', "#1234", 'NULL', "http://localhost/return", "http://localhost/return", "TOML"]
+    @helper.expects(:encode_value).with(transaction_params.join('|')).returns("dummy encoded value").twice
 
-    @helper.generate_request_parameter
+    @helper.form_fields
+    @helper.send(:add_request_parameters)
+    assert_field 'requestparameter', "dummy encoded value"
   end
   
   def test_parameters_do_not_contain_special_characters
-    fill_in_transaction_details!(@helper)
+    @helper.customer :first_name => "Bob", :last_name => "B & Ob", :email => 'bob@example.com'
+    @helper.description "50% discount for bob's order"
     
+    @helper.form_fields.each do |name, value|
+      assert_no_match %r/[~'"&#%]/, value
+    end
   end
   
   
@@ -126,11 +155,44 @@ class DirecPayHelperTest < Test::Unit::TestCase
     assert_equal exported_fields, @helper.form_fields.keys.sort
   end
   
-  def test_delete_ME
-    encoded = "TVRqQXdPVEEwTWpneE1EQXdNREF4ZkVSUFRYeEpUa1I4U1U1U2ZEVTRMakF3ZkRJeWZFNVZURXg4YUhSMApjRG92TDJ4dlkyRnNhRzl6ZERvek1EQXdMMjl5WkdWeWN5OHhMMlZrTlRJek1EWTVObUZrTlRJMVlqbGwKTXpJeVlUWmhOalJpTlRZek1qSmxMMlJ2Ym1VL2RYUnRYMjV2YjNabGNuSnBaR1U5TVh4b2RIUndPaTh2CmFHRnlaR052Y21WbllXMWxjaTVzYjJOaGJHaHZjM1E2TXpBd01IeFVUMDFN"
-    puts @helper.send(:decode_value, encoded)
+  def test_encode_value
+    # outofdate_expected = 'TVRqQXdPVEEwTWpneE1EQXdNREF4ZkVSUFRYeEpUa1I4U1U1U2ZEVTRMakF3ZkRJeWZERjhhSFIwY0RvdkwyeHZZMkZzYUc5emREb3pNREF3TDI5eVpHVnljeTh4TDJWa05USXpNRFk1Tm1Ga05USTFZamxsTXpJeVlUWmhOalJpTlRZek1qSmxMMlJ2Ym1VL2RYUnRYMjV2YjNabGNuSnBaR1U5TVh4b2RIUndPaTh2YUdGeVpHTnZjbVZuWVcxbGNpNXNiMk5oYkdodmMzUTZNekF3TUh4VVQwMU0='
+    expected = 'TVRqQXdPVEEwTWpneE1EQXdNREF4ZkVSUFRYeEpUa1I4U1U1U2ZEVTRMakF3ZkRJeWZFNVZURXg4YUhSMGNEb3ZMMnh2WTJGc2FHOXpkRG96TURBd0wyOXlaR1Z5Y3k4eEwyVmtOVEl6TURZNU5tRmtOVEkxWWpsbE16SXlZVFpoTmpSaU5UWXpNakpsTDJSdmJtVS9kWFJ0WDI1dmIzWmxjbkpwWkdVOU1YeG9kSFJ3T2k4dmFHRnlaR052Y21WbllXMWxjaTVzYjJOaGJHaHZjM1E2TXpBd01IeFVUMDFN'
+    decoded  = '200904281000001|DOM|IND|INR|58.00|22|NULL|http://localhost:3000/orders/1/ed5230696ad525b9e322a6a64b56322e/done?utm_nooverride=1|http://hardcoregamer.localhost:3000|TOML'
+
+    encoded = @helper.send(:encode_value, decoded)
+    assert_equal expected, encoded
+  end
+
+  def test_decode_value
+    expected = '200904281000001|DOM|IND|INR|58.00|22|1|http://localhost:3000/orders/1/ed5230696ad525b9e322a6a64b56322e/done?utm_nooverride=1|http://hardcoregamer.localhost:3000|TOML'
+    encoded = 'TVRqQXdPVEEwTWpneE1EQXdNREF4ZkVSUFRYeEpUa1I4U1U1U2ZEVTRMakF3ZkRJeWZERjhhSFIwY0RvdkwyeHZZMkZzYUc5emREb3pNREF3TDI5eVpHVnljeTh4TDJWa05USXpNRFk1Tm1Ga05USTFZamxsTXpJeVlUWmhOalJpTlRZek1qSmxMMlJ2Ym1VL2RYUnRYMjV2YjNabGNuSnBaR1U5TVh4b2RIUndPaTh2YUdGeVpHTnZjbVZuWVcxbGNpNXNiMk5oYkdodmMzUTZNekF3TUh4VVQwMU0='
+     
+    decoded = @helper.send(:decode_value, encoded)
+    assert_equal expected, decoded
+  end
+
+  def test_failure_url
+    @helper.return_url = "http://localhost/return"
+    @helper.failure_url = "http://localhost/fail"
+    
+    assert_field 'Failure URL', "http://localhost/fail"
+  end
+
+  def test_failure_url_is_set_to_return_url_if_not_provided
+    @helper.return_url = "http://localhost/return"
+    @helper.form_fields
+    assert_field 'Failure URL', "http://localhost/return"
   end
   
+
+  
+  def test_DELETE_ME
+    params = '200904281000001|DOM|IND|INR|1.00|123128787156125676|1|http://pingme.heroku.com|http://pingme.heroku.com|TOML'
+    # response = '0101|429386545202|1|22334455|000026478|1.00|I1||902183|'
+    encoded = @helper.send(:encode_value, params)
+  end
+
   private
   
   def fill_in_transaction_details!(helper)
@@ -142,6 +204,5 @@ class DirecPayHelperTest < Test::Unit::TestCase
     helper.billing_address(indian_address)
 
     helper.return_url = "http://localhost/return"
-    helper.cancel_return_url = "http://localhost/cancel"
   end
 end

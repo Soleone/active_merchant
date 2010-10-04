@@ -5,92 +5,68 @@ module ActiveMerchant #:nodoc:
     module Integrations #:nodoc:
       module DirecPay
         class Notification < ActiveMerchant::Billing::Integrations::Notification
+          RESPONSE_PARAMS = [ 'DirecPay Reference ID', 'Flag', 'Country', 'Currency', 'Other Details', 'Merchant Order No', 'Amount' ]
+
           def complete?
-            params['']
+            status == 'Completed'
           end 
 
           def item_id
-            params['']
+            params['Merchant Order No']
           end
 
           def transaction_id
-            params['']
+            params['DirecPay Reference ID']
           end
 
-          # When was this payment received by the client. 
-          def received_at
-            params['']
-          end
-
-          def payer_email
-            params['']
-          end
-         
-          def receiver_email
-            params['']
-          end 
-
-          def security_key
-            params['']
-          end
-
-          # the money amount we received in X.2 decimal.
+          # the money amount we received in X.2 decimal
           def gross
-            params['']
+            params['Amount']
           end
 
+          def currency
+            params['Currency']
+          end
+          
+          def country
+            params['Country']
+          end
+          
+          def other_details
+            params['Other Details']
+          end
+          
           # Was this a test transaction?
           def test?
-            params[''] == 'test'
+            # params[''] == 'test'
           end
 
           def status
-            params['']
+            case params['Flag']
+            when 'SUCCESS'
+              'Completed'
+            when /Transaction Booked/i
+              'Pending'
+            when 'FAIL'
+              'Failed'
+            else
+              'Failed'
+            end
           end
 
-          # Acknowledge the transaction to DirecPay. This method has to be called after a new 
-          # apc arrives. DirecPay will verify that all the information we received are correct and will return a 
-          # ok or a fail. 
-          # 
-          # Example:
-          # 
-          #   def ipn
-          #     notify = DirecPayNotification.new(request.raw_post)
-          #
-          #     if notify.acknowledge 
-          #       ... process order ... if notify.complete?
-          #     else
-          #       ... log possible hacking attempt ...
-          #     end
-          def acknowledge      
-            payload = raw
-
-            uri = URI.parse(DirecPay.notification_confirmation_url)
-
-            request = Net::HTTP::Post.new(uri.path)
-
-            request['Content-Length'] = "#{payload.size}"
-            request['User-Agent'] = "Active Merchant -- http://home.leetsoft.com/am"
-            request['Content-Type'] = "application/x-www-form-urlencoded" 
-
-            http = Net::HTTP.new(uri.host, uri.port)
-            http.verify_mode    = OpenSSL::SSL::VERIFY_NONE unless @ssl_strict
-            http.use_ssl        = true
-
-            response = http.request(request, payload)
-
-            # Replace with the appropriate codes
-            raise StandardError.new("Faulty DirecPay result: #{response.body}") unless ["AUTHORISED", "DECLINED"].include?(response.body)
-            response.body == "AUTHORISED"
+          def acknowledge
+            true
           end
- private
+          
+          
+          private
 
           # Take the posted data and move the relevant data into a hash
           def parse(post)
-            @raw = post
-            for line in post.split('&')
-              key, value = *line.scan( %r{^(\w+)\=(.*)$} ).flatten
-              params[key] = value
+            super            
+            values = params['responseparams'].to_s.split('|')
+            RESPONSE_PARAMS.each_with_index do |name, index|
+              params[name] = values[index]
             end
           end
         end

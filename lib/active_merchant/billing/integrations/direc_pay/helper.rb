@@ -2,8 +2,12 @@ require 'base64'
 
 # TODO
 # ====
-#
-#
+# 
+# * Phone number mapping for countries outside of India
+# * Don't send state as two character code but with full name instead
+# * Icons in Shopify for credit cards that get accepted
+# * Make sure special characters are removed in form fields
+# 
 # QUESTIONS
 # =========
 # 
@@ -23,8 +27,6 @@ module ActiveMerchant #:nodoc:
           mapping :currency, 'Currency'
           mapping :country,  'Country'
           
-          mapping :customer, :name  => 'custName',
-                             :email => 'custEmailId'
           mapping :billing_address,  :city     => 'custCity',
                                      :address1 => 'custAddress',
                                      :state    => 'custState',
@@ -40,12 +42,15 @@ module ActiveMerchant #:nodoc:
                                      :country  => 'deliveryCountry',
                                      :phone2   => 'deliveryMobileNo'
 
-          # mapping :return_url, ''
+          mapping :customer, :name  => 'custName',
+                             :email => 'custEmailId'
+
           mapping :description, 'otherNotes'
           mapping :edit_allowed, 'editAllowed'
           
           mapping :return_url, 'Success URL'
-          mapping :cancel_return_url, 'Failure URL'
+          mapping :failure_url, 'Failure URL'
+          
           mapping :operating_mode, 'Operating Mode'
           mapping :other_details, 'Other Details'
           mapping :collaborator, 'Collaborator'
@@ -56,7 +61,7 @@ module ActiveMerchant #:nodoc:
           OTHER_DETAILS  = 'NULL'
           EDIT_ALLOWED   = 'N'
           
-          ENCODED_PARAMS = [:account, :operating_mode, :country, :currency, :amount, :order, :other_details, :return_url, :cancel_return_url, :collaborator]
+          ENCODED_PARAMS = [ :account, :operating_mode, :country, :currency, :amount, :order, :other_details, :return_url, :failure_url, :collaborator ]
           
           def initialize(order, account, options = {})
             super
@@ -96,45 +101,75 @@ module ActiveMerchant #:nodoc:
           end
           
           def form_fields
-            add_field('requestparameter', generate_request_parameter)
-            fields = @fields.dup
-            ENCODED_PARAMS.each do |param|
-              fields.delete(mappings[param])
-            end
-            fields
-          end
-          
-          def generate_request_parameter
-            params = ENCODED_PARAMS.map{ |param| fields[mappings[param]] }
-            encode_value(params.join('|'))
+            add_failure_url
+            add_request_parameters
+            
+            unencoded_parameters
           end
           
           
           private
+
+          def add_request_parameters            
+            params = ENCODED_PARAMS.map{ |param| fields[mappings[param]] }
+            encoded = encode_value(params.join('|'))
+            
+            add_field('requestparameter', encoded)
+          end
+          
+          def unencoded_parameters
+            params = fields.dup
+            # remove all encoded params from exported fields
+            ENCODED_PARAMS.each{ |param| params.delete(mappings[param]) }
+            # remove all special characters from each field value
+            params = params.collect{|name, value| [name, remove_special_characters(value)] }
+            Hash[params]
+          end
+          
+          def add_failure_url
+            if fields[mappings[:failure_url]].nil?
+              add_field(mappings[:failure_url], fields[mappings[:return_url]])
+            end
+          end
           
           def add_street_address!(params)
             address = params[:address1]
             address << " #{params[:address2]}" if params[:address2]
             params.merge!(:address1 => address)
           end
-          
+                    
+          # Possible implementations:
+          # 1. Use spaces to delimit three numbers
+          # 2. Always look up hardcoded phone code for country and strip that from number and split the rest in two
           def add_phone_for!(address_type, params)
             address_field = address_type == :billing_address ? 'custPhoneNo' : 'deliveryPhNo'
             
             if params.has_key?(:phone)
               country = fields[mappings[address_type][:country]]
               phone = params[:phone].to_s
-              # Whipe all non digits
-              phone.gsub!(/\D+/, '')
+              # Remove all non digits
+              phone.gsub!(/[^\d ]+/, '')
               
-              if country == 'IN' && phone =~ /(91)?(\d{3})(\d{4,})$/
+              phone_country_code, phone_area_code, phone_number = nil
+
+              if country == 'IN' && phone =~ /(91)? *(\d{3}) *(\d{4,})$/
                 phone_country_code, phone_area_code, phone_number = $1, $2, $3
-                add_field("#{address_field}1", phone_country_code || '91')
-                add_field("#{address_field}2", phone_area_code)
-                add_field("#{address_field}3", phone_number)
               else
-                add_field("#{address_field}3", phone)                
+                numbers = phone.split(' ')
+                case numbers.size
+                when 3
+                  phone_country_code, phone_area_code, phone_number = numbers
+                when 2
+                  phone_area_code, phone_number = numbers
+                else
+                  phone =~ /(\d{3})(\d+)$/
+                  phone_area_code, phone_number = $1, $2
+                end
               end
+
+              add_field("#{address_field}1", phone_country_code || Country.find(country).phone_code || '91')
+              add_field("#{address_field}2", phone_area_code)
+              add_field("#{address_field}3", phone_number)              
             end
           end
           
@@ -144,15 +179,15 @@ module ActiveMerchant #:nodoc:
           end
           
           def encode_value(value)
-            encoded = Base64.encode64(value).chomp
+            encoded = ActiveSupport::Base64.encode64s(value)
             string_to_encode = encoded[0, 1] + "T" + encoded[1, encoded.length]
-            Base64.encode64(string_to_encode).chomp
+            ActiveSupport::Base64.encode64s(string_to_encode)
           end
           
           def decode_value(value)
-            decoded = Base64.decode64(value)
+            decoded = ActiveSupport::Base64.decode64(value)
             string_to_decode = decoded[0, 1] + decoded[2, decoded.length]
-            Base64.decode64(string_to_decode)
+            ActiveSupport::Base64.decode64(string_to_decode)
           end
         end
       end

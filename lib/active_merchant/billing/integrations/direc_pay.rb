@@ -4,11 +4,13 @@ require File.dirname(__FILE__) + '/direc_pay/notification.rb'
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     module Integrations #:nodoc:
-      module DirecPay 
+      module DirecPay
+        autoload :Return, File.dirname(__FILE__) + '/direc_pay/return.rb'
         autoload :Helper, File.dirname(__FILE__) + '/direc_pay/helper.rb'
         autoload :Notification, File.dirname(__FILE__) + '/direc_pay/notification.rb'
        
         mattr_accessor :production_url, :test_url
+        
         self.production_url = "https://www.timesofmoney.com/direcpay/secure/dpMerchantTransaction.jsp"
         self.test_url       = "https://test.timesofmoney.com/direcpay/secure/dpMerchantTransaction.jsp"
 
@@ -26,7 +28,11 @@ module ActiveMerchant #:nodoc:
         
         def self.notification(post)
           Notification.new(post)
-        end  
+        end
+        
+        def self.return(query_string)
+          Return.new(query_string)
+        end
       end
     end
   end
