@@ -26,7 +26,12 @@ module ActiveMerchant #:nodoc:
           def gross
             params['Amount']
           end
-
+          
+          # TODO: maybe remove from Return class
+          def amount
+            Money.new(gross.to_i * 100, 'INR')
+          end
+          
           def currency
             params['Currency']
           end
@@ -58,7 +63,12 @@ module ActiveMerchant #:nodoc:
           end
 
           def message
-            params['Error message']
+            case status
+            when 'Failed'
+              "The transaction was refused by the payment server."
+            else
+              params['Error message']              
+            end
           end
 
           def acknowledge
@@ -66,16 +76,21 @@ module ActiveMerchant #:nodoc:
           end
 
 
-          private
-
           # Take the posted data and move the relevant data into a hash
           def parse(post)
-            super            
+            @params = {}
+            @raw = post.to_s
+            for line in @raw.split('&')    
+              key, value = *line.scan( %r{^([A-Za-z0-9_.]+)\=(.*)$} ).flatten
+              params[key] = CGI.unescape(value)
+            end
+            
             values = params['responseparams'].to_s.split('|')
             response_params = values.size == 3 ? ['DirecPay Reference ID', 'Flag', 'Error message'] : RESPONSE_PARAMS
             response_params.each_with_index do |name, index|
               params[name] = values[index]
             end
+            params
           end
         end
         

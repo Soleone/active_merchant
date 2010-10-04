@@ -28,8 +28,8 @@ module ActiveMerchant #:nodoc:
           Notification.new(post)
         end
         
-        def self.return(query_string)
-          Return.new(query_string)
+        def self.return(post)
+          Return.new(post)
         end
       end
     end

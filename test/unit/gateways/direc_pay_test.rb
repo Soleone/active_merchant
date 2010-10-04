@@ -3,7 +3,7 @@ require 'test_helper'
 class DirecPayTest < Test::Unit::TestCase
   def setup
     @merchant_id = '200904281000001'
-    @authorization = '1001010000026496'
+    @authorization = '1001010000026680'
     @notification_url = "http://pingme.heroku.com"
     @gateway = DirecPayGateway.new(:login => @merchant_id, :test => false)    
   end
