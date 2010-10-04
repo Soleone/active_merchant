@@ -42,6 +42,7 @@ module ActiveMerchant #:nodoc:
     def initialize(options = {})
       requires!(options, :name, :alpha2, :alpha3, :numeric)
       @name = options.delete(:name)
+      @phone_code = options.delete(:phone_code)
       @codes = options.collect{|k,v| CountryCode.new(v)}
     end
 
@@ -62,6 +63,10 @@ module ActiveMerchant #:nodoc:
       @name  
     end
 
+    def phone_code
+      @phone_code
+    end
+    
     COUNTRIES = [
       { :alpha2 => 'AF', :name => 'Afghanistan', :alpha3 => 'AFG', :numeric => '004' }, 
       { :alpha2 => 'AL', :name => 'Albania', :alpha3 => 'ALB', :numeric => '008' }, 
@@ -99,7 +104,7 @@ module ActiveMerchant #:nodoc:
       { :alpha2 => 'BI', :name => 'Burundi', :alpha3 => 'BDI', :numeric => '108' }, 
       { :alpha2 => 'KH', :name => 'Cambodia', :alpha3 => 'KHM', :numeric => '116' }, 
       { :alpha2 => 'CM', :name => 'Cameroon', :alpha3 => 'CMR', :numeric => '120' }, 
-      { :alpha2 => 'CA', :name => 'Canada', :alpha3 => 'CAN', :numeric => '124' }, 
+      { :alpha2 => 'CA', :name => 'Canada', :alpha3 => 'CAN', :numeric => '124', :phone_code => '01' }, 
       { :alpha2 => 'CV', :name => 'Cape Verde', :alpha3 => 'CPV', :numeric => '132' }, 
       { :alpha2 => 'KY', :name => 'Cayman Islands', :alpha3 => 'CYM', :numeric => '136' }, 
       { :alpha2 => 'CF', :name => 'Central African Republic', :alpha3 => 'CAF', :numeric => '140' }, 
@@ -161,7 +166,7 @@ module ActiveMerchant #:nodoc:
       { :alpha2 => 'HK', :name => 'Hong Kong', :alpha3 => 'HKG', :numeric => '344' }, 
       { :alpha2 => 'HU', :name => 'Hungary', :alpha3 => 'HUN', :numeric => '348' }, 
       { :alpha2 => 'IS', :name => 'Iceland', :alpha3 => 'ISL', :numeric => '352' }, 
-      { :alpha2 => 'IN', :name => 'India', :alpha3 => 'IND', :numeric => '356' }, 
+      { :alpha2 => 'IN', :name => 'India', :alpha3 => 'IND', :numeric => '356', :phone_code => '91' }, 
       { :alpha2 => 'ID', :name => 'Indonesia', :alpha3 => 'IDN', :numeric => '360' }, 
       { :alpha2 => 'IR', :name => 'Iran, Islamic Republic of', :alpha3 => 'IRN', :numeric => '364' }, 
       { :alpha2 => 'IQ', :name => 'Iraq', :alpha3 => 'IRQ', :numeric => '368' }, 
@@ -293,7 +298,7 @@ module ActiveMerchant #:nodoc:
       { :alpha2 => 'UA', :name => 'Ukraine', :alpha3 => 'UKR', :numeric => '804' }, 
       { :alpha2 => 'AE', :name => 'United Arab Emirates', :alpha3 => 'ARE', :numeric => '784' }, 
       { :alpha2 => 'GB', :name => 'United Kingdom', :alpha3 => 'GBR', :numeric => '826' }, 
-      { :alpha2 => 'US', :name => 'United States', :alpha3 => 'USA', :numeric => '840' }, 
+      { :alpha2 => 'US', :name => 'United States', :alpha3 => 'USA', :numeric => '840', :phone_code => '01' }, 
       { :alpha2 => 'UM', :name => 'United States Minor Outlying Islands', :alpha3 => 'UMI', :numeric => '581' }, 
       { :alpha2 => 'UY', :name => 'Uruguay', :alpha3 => 'URY', :numeric => '858' }, 
       { :alpha2 => 'UZ', :name => 'Uzbekistan', :alpha3 => 'UZB', :numeric => '860' }, 

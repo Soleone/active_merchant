@@ -66,5 +66,14 @@ class CountryTest < Test::Unit::TestCase
     country_names = Country::COUNTRIES.map { | each | each[:name] }
     assert_equal(country_names.sort, country_names)
   end
+
+  def test_phone_code_existing
+    assert_equal '01', Country.find('Canada').phone_code
+    assert_equal '01', Country.find('United States').phone_code
+    assert_equal '91', Country.find('India').phone_code
+  end
   
+  def test_phone_code_not_existing
+    assert_nil Country.find('Italy').phone_code
+  end
 end
