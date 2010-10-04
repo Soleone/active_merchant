@@ -44,9 +44,8 @@ module ActiveMerchant #:nodoc:
             params['Other Details']
           end
   
-          # Was this a test transaction?
           def test?
-            transaction_id == '200904281000001'
+            # no real way to find out from the notification
           end
 
           def status
