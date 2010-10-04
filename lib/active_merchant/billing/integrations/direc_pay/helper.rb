@@ -61,6 +61,12 @@ module ActiveMerchant #:nodoc:
           OTHER_DETAILS  = 'NULL'
           EDIT_ALLOWED   = 'N'
           
+          PHONE_CODES = {
+            'IN' => '91',
+            'US' => '01',
+            'CA' => '01'
+          }
+          
           ENCODED_PARAMS = [ :account, :operating_mode, :country, :currency, :amount, :order, :other_details, :return_url, :failure_url, :collaborator ]
           
           def initialize(order, account, options = {})
@@ -91,6 +97,7 @@ module ActiveMerchant #:nodoc:
           def shipping_address(params = {})
             add_street_address!(params)
             super(params.dup)
+            add_field(mappings[:shipping_address][:name], fields[mappings[:customer][:name]]) if fields[mappings[:shipping_address][:name]].blank?
             add_phone_for!(:shipping_address, params)
           end
           
@@ -167,7 +174,7 @@ module ActiveMerchant #:nodoc:
                 end
               end
 
-              add_field("#{address_field}1", phone_country_code || Country.find(country).phone_code || '91')
+              add_field("#{address_field}1", phone_country_code || phone_code_for_country(country) || '91')
               add_field("#{address_field}2", phone_area_code)
               add_field("#{address_field}3", phone_number)              
             end
@@ -188,6 +195,10 @@ module ActiveMerchant #:nodoc:
             decoded = ActiveSupport::Base64.decode64(value)
             string_to_decode = decoded[0, 1] + decoded[2, decoded.length]
             ActiveSupport::Base64.decode64(string_to_decode)
+          end
+          
+          def phone_code_for_country(country)
+            PHONE_CODES[country]
           end
         end
       end

@@ -1,12 +1,10 @@
-require File.dirname(__FILE__) + '/direc_pay/helper.rb'
-require File.dirname(__FILE__) + '/direc_pay/notification.rb'
-
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     module Integrations #:nodoc:
       module DirecPay
-        autoload :Return, File.dirname(__FILE__) + '/direc_pay/return.rb'
         autoload :Helper, File.dirname(__FILE__) + '/direc_pay/helper.rb'
+        autoload :Common, File.dirname(__FILE__) + '/direc_pay/common.rb'
+        autoload :Return, File.dirname(__FILE__) + '/direc_pay/return.rb'
         autoload :Notification, File.dirname(__FILE__) + '/direc_pay/notification.rb'
        
         mattr_accessor :production_url, :test_url

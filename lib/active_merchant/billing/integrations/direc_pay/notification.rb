@@ -5,70 +5,7 @@ module ActiveMerchant #:nodoc:
     module Integrations #:nodoc:
       module DirecPay
         class Notification < ActiveMerchant::Billing::Integrations::Notification
-          RESPONSE_PARAMS = [ 'DirecPay Reference ID', 'Flag', 'Country', 'Currency', 'Other Details', 'Merchant Order No', 'Amount' ]
-
-          def complete?
-            status == 'Completed'
-          end 
-
-          def item_id
-            params['Merchant Order No']
-          end
-
-          def transaction_id
-            params['DirecPay Reference ID']
-          end
-
-          # the money amount we received in X.2 decimal
-          def gross
-            params['Amount']
-          end
-
-          def currency
-            params['Currency']
-          end
-          
-          def country
-            params['Country']
-          end
-          
-          def other_details
-            params['Other Details']
-          end
-          
-          # Was this a test transaction?
-          def test?
-            # params[''] == 'test'
-          end
-
-          def status
-            case params['Flag']
-            when 'SUCCESS'
-              'Completed'
-            when /Transaction Booked/i
-              'Pending'
-            when 'FAIL'
-              'Failed'
-            else
-              'Failed'
-            end
-          end
-
-          def acknowledge
-            true
-          end
-          
-          
-          private
-
-          # Take the posted data and move the relevant data into a hash
-          def parse(post)
-            super            
-            values = params['responseparams'].to_s.split('|')
-            RESPONSE_PARAMS.each_with_index do |name, index|
-              params[name] = values[index]
-            end
-          end
+          include Common
         end
       end
     end

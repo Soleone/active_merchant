@@ -11,7 +11,7 @@ class DirecPayNotificationTest < Test::Unit::TestCase
     assert @direc_pay.complete?
     assert_equal "Completed", @direc_pay.status
     assert_equal "1001010000026481", @direc_pay.transaction_id
-    assert_equal "123128787156125675", @direc_pay.item_id
+    assert_equal "1001", @direc_pay.item_id
     assert_equal "1.00", @direc_pay.gross
     assert_equal "INR", @direc_pay.currency
     assert_equal "IND", @direc_pay.country
@@ -22,11 +22,19 @@ class DirecPayNotificationTest < Test::Unit::TestCase
     assert !@direc_pay.complete?
     assert_equal "Failed", @direc_pay.status
     assert_equal "1001010000026516", @direc_pay.transaction_id
-    assert_equal "123128787156125676", @direc_pay.item_id
+    assert_equal "1001", @direc_pay.item_id
     assert_equal "1.00", @direc_pay.gross
     assert_equal "INR", @direc_pay.currency
     assert_equal "IND", @direc_pay.country
     assert @direc_pay.acknowledge
+  end
+  
+  def test_error
+    @direc_pay = DirecPay::Notification.new(http_raw_data_error)
+    assert !@direc_pay.complete?
+    assert_equal "Error", @direc_pay.status
+    assert_equal "1001010000026516", @direc_pay.transaction_id
+    assert_equal "Record not found for this transaction reference number", @direc_pay.message
   end
   
   def test_compositions
@@ -45,10 +53,18 @@ class DirecPayNotificationTest < Test::Unit::TestCase
   private
 
   def http_raw_data_success
-    "responseparams=1001010000026481|SUCCESS|IND|INR|1|123128787156125675|1.00|"
+    "responseparams=1001010000026481|SUCCESS|IND|INR|1|1001|1.00|"
   end
   
   def http_raw_data_failure
-    "responseparams=1001010000026516|FAIL|IND|INR|1|123128787156125676|1.00|"
+    "responseparams=1001010000026516|FAIL|IND|INR|1|1001|1.00|"
   end
+  
+  def http_raw_data_pending
+    "responseparams=1001010000026516|PENDING|IND|INR|1|1001|1|"
+  end
+  
+  def http_raw_data_error
+    "responseparams=1001010000026516|ERROR|Record not found for this transaction reference number"
+  end  
 end

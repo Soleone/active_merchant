@@ -37,6 +37,23 @@ class DirecPayHelperTest < Test::Unit::TestCase
     assert_field 'custCountry', 'IN'
   end
   
+  def test_shipping_address_mapping
+    @helper.customer :first_name => 'Cody', :last_name => 'Fauser', :email => 'cody@example.com'
+    @helper.shipping_address :address1 => '1 My Street',
+                             :address2 => 'apartment 8',
+                             :city => 'Leeds',
+                             :state => 'Yorkshire',
+                             :zip => 'LS2 7EE',
+                             :country  => 'IN'
+   
+    assert_field 'deliveryAddress', '1 My Street apartment 8'
+    assert_field 'deliveryCity', 'Leeds'
+    assert_field 'deliveryState', 'Yorkshire'
+    assert_field 'deliveryPinCode', 'LS2 7EE'
+    assert_field 'deliveryCountry', 'IN'
+    assert_field 'deliveryName', 'Cody Fauser'    
+  end
+  
   def test_address_with_a_single_street_address_field
     @helper.billing_address :address1 => "1 My Street"
     @helper.shipping_address :address1 => "1 My Street"
