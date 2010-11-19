@@ -62,10 +62,11 @@ module ActiveMerchant #:nodoc:
           xml.tag! 'DoExpressCheckoutPaymentRequest', 'xmlns:n2' => EBAY_NAMESPACE do
             xml.tag! 'n2:Version', API_VERSION
             xml.tag! 'n2:DoExpressCheckoutPaymentRequestDetails' do
-              xml.tag! 'n2:PaymentAction', action
               xml.tag! 'n2:Token', options[:token]
               xml.tag! 'n2:PayerID', options[:payer_id]
               xml.tag! 'n2:PaymentDetails' do
+                xml.tag! 'n2:PaymentAction', action
+
                 xml.tag! 'n2:OrderTotal', localized_amount(money, currency_code), 'currencyID' => currency_code
                 
                 # All of the values must be included together and add up to the order total
@@ -94,12 +95,16 @@ module ActiveMerchant #:nodoc:
           xml.tag! 'SetExpressCheckoutRequest', 'xmlns:n2' => EBAY_NAMESPACE do
             xml.tag! 'n2:Version', API_VERSION
             xml.tag! 'n2:SetExpressCheckoutRequestDetails' do
-              xml.tag! 'n2:PaymentAction', action
-              xml.tag! 'n2:OrderTotal', amount(money).to_f.zero? ? localized_amount(100, currency_code) : localized_amount(money, currency_code), 'currencyID' => currency_code
               if options[:max_amount]
                 xml.tag! 'n2:MaxAmount', localized_amount(options[:max_amount], currency_code), 'currencyID' => currency_code
               end
-              add_address(xml, 'n2:Address', options[:shipping_address] || options[:address])
+
+              xml.tag! 'n2:PaymentDetails' do
+                xml.tag! 'n2:OrderTotal', amount(money).to_f.zero? ? localized_amount(100, currency_code) : localized_amount(money, currency_code), 'currencyID' => currency_code
+                xml.tag! 'n2:InvoiceID', options[:order_id]
+                add_address(xml, 'n2:ShipToAddress', options[:shipping_address] || options[:address])
+              end
+              
               xml.tag! 'n2:AddressOverride', options[:address_override] ? '1' : '0'
               xml.tag! 'n2:NoShipping', options[:no_shipping] ? '1' : '0'
               xml.tag! 'n2:ReturnURL', options[:return_url]
@@ -107,7 +112,6 @@ module ActiveMerchant #:nodoc:
               xml.tag! 'n2:IPAddress', options[:ip] unless options[:ip].blank?
               xml.tag! 'n2:OrderDescription', options[:description]
               xml.tag! 'n2:BuyerEmail', options[:email] unless options[:email].blank?
-              xml.tag! 'n2:InvoiceID', options[:order_id]
               
               if options[:billing_agreement]
                 xml.tag! 'n2:BillingAgreementDetails' do
