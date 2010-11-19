@@ -99,7 +99,7 @@ module ActiveMerchant #:nodoc:
               if options[:max_amount]
                 xml.tag! 'n2:MaxAmount', localized_amount(options[:max_amount], currency_code), 'currencyID' => currency_code
               end
-              add_address(xml, 'n2:Address', options[:shipping_address] || options[:address])
+              add_address(xml, 'n2:ShipToAddress', options[:shipping_address] || options[:address])
               xml.tag! 'n2:AddressOverride', options[:address_override] ? '1' : '0'
               xml.tag! 'n2:NoShipping', options[:no_shipping] ? '1' : '0'
               xml.tag! 'n2:ReturnURL', options[:return_url]
