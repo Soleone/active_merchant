@@ -190,6 +190,11 @@ class SkipJackTest < Test::Unit::TestCase
     assert response = @gateway.capture(@amount, response.authorization)    
   end
   
+  def test_capture_sends_amount
+    @gateway.expects(:ssl_post).with('https://developer.skipjackic.com/scripts/evolvcc.dll?SJAPI_TransactionChangeStatusRequest', regexp_matches(/szAmount=123\.45/)).returns(successful_capture_response)
+    @gateway.capture(12345, 'dummy-authorization')
+  end
+  
   private
   def successful_authorization_response
     <<-CSV
