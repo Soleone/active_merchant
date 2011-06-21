@@ -14,13 +14,13 @@ module ActiveMerchant #:nodoc:
             params['transaction_id']
           end
 
-          def order_id
+          def item_id
             params['order_id']
           end
 
           # When was this payment received by the client.
           def received_at
-            Time.parse(params['received_at']).utc
+            Time.parse(params['received_at'].to_s).utc
           end
 
           def security_key
@@ -50,7 +50,6 @@ module ActiveMerchant #:nodoc:
           #     else
           #       ... log possible hacking attempt ...
           #     end
-
           def acknowledge
             payload = raw
 

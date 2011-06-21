@@ -3,7 +3,6 @@ module ActiveMerchant #:nodoc:
     module Integrations #:nodoc:
       module EPaymentPlan
         class Helper < ActiveMerchant::Billing::Integrations::Helper
-          # Replace with the real mapping
           mapping :account, 'order[account]'
           mapping :amount, 'order[amount]'
 

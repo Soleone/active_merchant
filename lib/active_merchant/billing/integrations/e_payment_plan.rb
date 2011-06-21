@@ -1,10 +1,9 @@
-require File.dirname(__FILE__) + '/e_payment_plan/helper.rb'
-require File.dirname(__FILE__) + '/e_payment_plan/notification.rb'
-
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     module Integrations #:nodoc:
       module EPaymentPlan
+        autoload :Helper, File.dirname(__FILE__) + '/e_payment_plan/helper.rb'
+        autoload :Notification, File.dirname(__FILE__) + '/e_payment_plan/notification.rb'
 
         mattr_accessor :production_url
         self.production_url = 'https://www.epaymentplans.com'
@@ -36,8 +35,8 @@ module ActiveMerchant #:nodoc:
           end
         end
 
-        def self.notification(post)
-          Notification.new(post)
+        def self.notification(post, options = {})
+          Notification.new(post, options)
         end
 
         def self.return(query_string, options = {})
