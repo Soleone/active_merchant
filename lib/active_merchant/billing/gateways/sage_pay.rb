@@ -4,7 +4,7 @@ module ActiveMerchant #:nodoc:
       cattr_accessor :simulate
       self.simulate = false
       
-      TEST_URL = 'https://test.sagepay.com/gateway/service'
+      TEST_URL = 'https://test.sagepay.com/showpost/showpost.asp'
       LIVE_URL = 'https://live.sagepay.com/gateway/service'
       SIMULATOR_URL = 'https://test.sagepay.com/Simulator'
       
