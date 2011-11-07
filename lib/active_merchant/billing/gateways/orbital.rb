@@ -242,17 +242,13 @@ module ActiveMerchant #:nodoc:
 
       def build_new_order_xml(action, money, parameters = {})
         requires!(parameters, :order_id)
-        xml = Builder::XmlMarkup.new(:indent => 2)
-        xml.instruct!(:xml, :version => '1.0', :encoding => 'UTF-8')
+        xml = xml_envelope
         xml.tag! :Request do
           xml.tag! :NewOrder do
-            xml.tag! :OrbitalConnectionUsername, @options[:login] unless ip_authentication?
-            xml.tag! :OrbitalConnectionPassword, @options[:password] unless ip_authentication?
+            add_xml_credentials(xml)
             xml.tag! :IndustryType, parameters[:industry_type] || "EC"
             xml.tag! :MessageType, action
-            xml.tag! :BIN, bin
-            xml.tag! :MerchantID, @options[:merchant_id]
-            xml.tag! :TerminalID, parameters[:terminal_id] || '001'            
+            add_bin_merchant_and_terminal(xml, parameters)
             
             yield xml if block_given?
             
@@ -272,17 +268,13 @@ module ActiveMerchant #:nodoc:
       
       def build_mark_for_capture_xml(money, authorization, parameters = {})
         tx_ref_num, order_id = authorization.split(';')
-        xml = Builder::XmlMarkup.new(:indent => 2)
-        xml.instruct!(:xml, :version => '1.0', :encoding => 'UTF-8')
+        xml = xml_envelope
         xml.tag! :Request do
           xml.tag! :MarkForCapture do
-            xml.tag! :OrbitalConnectionUsername, @options[:login] unless ip_authentication?
-            xml.tag! :OrbitalConnectionPassword, @options[:password] unless ip_authentication?
+            add_xml_credentials(xml)
             xml.tag! :OrderID, order_id
             xml.tag! :Amount, amount(money)
-            xml.tag! :BIN, bin
-            xml.tag! :MerchantID, @options[:merchant_id]
-            xml.tag! :TerminalID, parameters[:terminal_id] || '001'
+            add_bin_merchant_and_terminal(xml, parameters)
             xml.tag! :TxRefNum, tx_ref_num
           end
         end
@@ -291,19 +283,14 @@ module ActiveMerchant #:nodoc:
       
       def build_void_request_xml(authorization, parameters = {})
         tx_ref_num, order_id = authorization.split(';')
-        xml = Builder::XmlMarkup.new(:indent => 2)
-        xml.instruct!(:xml, :version => '1.0', :encoding => 'UTF-8')
+        xml = xml_envelope
         xml.tag! :Request do
           xml.tag! :Reversal do
-            xml.tag! :OrbitalConnectionUsername, @options[:login] unless ip_authentication?
-            xml.tag! :OrbitalConnectionPassword, @options[:password] unless ip_authentication?
+            add_xml_credentials(xml)
             xml.tag! :TxRefNum, tx_ref_num
             xml.tag! :TxRefIdx, parameters[:transaction_index]
-            xml.tag! :AdjustedAmt, amount(money)
             xml.tag! :OrderID, order_id
-            xml.tag! :BIN, bin
-            xml.tag! :MerchantID, @options[:merchant_id]
-            xml.tag! :TerminalID, parameters[:terminal_id] || '001'
+            add_bin_merchant_and_terminal(xml, parameters)
           end
         end
         xml.target!
@@ -319,6 +306,23 @@ module ActiveMerchant #:nodoc:
 
       def bin
         @options[:bin] || '000001' # default is Salem Global
+      end
+
+      def xml_envelope
+        xml = Builder::XmlMarkup.new(:indent => 2)
+        xml.instruct!(:xml, :version => '1.0', :encoding => 'UTF-8')
+        xml
+      end
+
+      def add_xml_credentials(xml)
+        xml.tag! :OrbitalConnectionUsername, @options[:login] unless ip_authentication?
+        xml.tag! :OrbitalConnectionPassword, @options[:password] unless ip_authentication?
+      end
+
+      def add_bin_merchant_and_terminal(xml, paramters)
+        xml.tag! :BIN, bin
+        xml.tag! :MerchantID, @options[:merchant_id]
+        xml.tag! :TerminalID, parameters[:terminal_id] || '001'
       end
     end
   end
