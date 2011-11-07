@@ -250,7 +250,7 @@ module ActiveMerchant #:nodoc:
             xml.tag! :OrbitalConnectionPassword, @options[:password] unless ip_authentication?
             xml.tag! :IndustryType, parameters[:industry_type] || "EC"
             xml.tag! :MessageType, action
-            xml.tag! :BIN, '000002' # PNS Tampa
+            xml.tag! :BIN, bin
             xml.tag! :MerchantID, @options[:merchant_id]
             xml.tag! :TerminalID, parameters[:terminal_id] || '001'            
             
@@ -280,7 +280,7 @@ module ActiveMerchant #:nodoc:
             xml.tag! :OrbitalConnectionPassword, @options[:password] unless ip_authentication?
             xml.tag! :OrderID, order_id
             xml.tag! :Amount, amount(money)
-            xml.tag! :BIN, '000002' # PNS Tampa
+            xml.tag! :BIN, bin
             xml.tag! :MerchantID, @options[:merchant_id]
             xml.tag! :TerminalID, parameters[:terminal_id] || '001'
             xml.tag! :TxRefNum, tx_ref_num
@@ -301,7 +301,7 @@ module ActiveMerchant #:nodoc:
             xml.tag! :TxRefIdx, parameters[:transaction_index]
             xml.tag! :AdjustedAmt, amount(money)
             xml.tag! :OrderID, order_id
-            xml.tag! :BIN, '000002' # PNS Tampa
+            xml.tag! :BIN, bin
             xml.tag! :MerchantID, @options[:merchant_id]
             xml.tag! :TerminalID, parameters[:terminal_id] || '001'
           end
@@ -315,6 +315,10 @@ module ActiveMerchant #:nodoc:
       
       def expiry_date(credit_card)
         "#{format(credit_card.month, :two_digits)}#{format(credit_card.year, :two_digits)}"
+      end
+
+      def bin
+        @options[:bin] || '000001' # default is Salem Global
       end
     end
   end
