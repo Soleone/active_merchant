@@ -122,8 +122,8 @@ module ActiveMerchant #:nodoc:
       end
       
       # setting money to nil will perform a full void
-      def void(money, authorization, options = {})
-        order = build_void_request_xml(money, authorization, options)
+      def void(authorization, options = {})
+        order = build_void_request_xml(authorization, options)
         commit(order)
       end
     
@@ -289,7 +289,7 @@ module ActiveMerchant #:nodoc:
         xml.target!
       end
       
-      def build_void_request_xml(money, authorization, parameters = {})
+      def build_void_request_xml(authorization, parameters = {})
         tx_ref_num, order_id = authorization.split(';')
         xml = Builder::XmlMarkup.new(:indent => 2)
         xml.instruct!(:xml, :version => '1.0', :encoding => 'UTF-8')
