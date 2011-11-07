@@ -319,7 +319,7 @@ module ActiveMerchant #:nodoc:
         xml.tag! :OrbitalConnectionPassword, @options[:password] unless ip_authentication?
       end
 
-      def add_bin_merchant_and_terminal(xml, paramters)
+      def add_bin_merchant_and_terminal(xml, parameters)
         xml.tag! :BIN, bin
         xml.tag! :MerchantID, @options[:merchant_id]
         xml.tag! :TerminalID, parameters[:terminal_id] || '001'
