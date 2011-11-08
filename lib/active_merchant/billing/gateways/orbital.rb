@@ -268,7 +268,6 @@ module ActiveMerchant #:nodoc:
       
       def build_mark_for_capture_xml(money, authorization, parameters = {})
         tx_ref_num, order_id = authorization.split(';')
-        order_id = parameters[:order_id] || order_id
         xml = xml_envelope
         xml.tag! :Request do
           xml.tag! :MarkForCapture do
@@ -284,7 +283,6 @@ module ActiveMerchant #:nodoc:
       
       def build_void_request_xml(authorization, parameters = {})
         tx_ref_num, order_id = authorization.split(';')
-        order_id = parameters[:order_id] || order_id
         xml = xml_envelope
         xml.tag! :Request do
           xml.tag! :Reversal do
