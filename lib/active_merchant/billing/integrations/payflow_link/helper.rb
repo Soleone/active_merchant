@@ -79,6 +79,7 @@ module ActiveMerchant #:nodoc:
 
             fields = @fields.collect {|key, value| "#{key}[#{value.length}]=#{value}" }.join("&")
 
+            Rails.logger.info "[PayflowLink] Sending the following fields to PayPal: #{fields.inspect}" if Rails.logger
             response = ssl_post(secure_token_url, fields)
 
             parse_response(response)
